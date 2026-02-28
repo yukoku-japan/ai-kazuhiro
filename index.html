@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI KAZUHIRO - 発言・政策 解説アシスタント</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500&family=Shippori+Mincho:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --deep: #16213e;
+    --accent: #e63946;
+    --gold: #d4a017;
+    --mist: #f0ece4;
+    --paper: #faf8f4;
+    --smoke: #8a8a9a;
+    --border: #d4cfc6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-image:
+      radial-gradient(ellipse at 10% 10%, rgba(212,160,23,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 90% 90%, rgba(230,57,70,0.04) 0%, transparent 60%);
+  }
+
+  /* Header */
+  header {
+    background: var(--ink);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    border-bottom: 3px solid var(--accent);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: white;
+    letter-spacing: 0.05em;
+  }
+
+  .logo-sub {
+    font-size: 0.65rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    margin-top: 2px;
+  }
+
+  .header-badge {
+    background: rgba(212,160,23,0.15);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Layout */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    height: calc(100vh - 64px);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    background: var(--deep);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+
+  .sidebar-section {
+    padding: 1.5rem 1.2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .sidebar-title {
+    font-size: 0.65rem;
+    color: var(--smoke);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    font-weight: 500;
+  }
+
+  .topic-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #d0cfc9;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.8rem;
+    text-align: left;
+    cursor: pointer;
+    margin-bottom: 6px;
+    transition: all 0.2s;
+    line-height: 1.4;
+  }
+
+  .topic-btn:hover {
+    background: rgba(230,57,70,0.12);
+    border-color: rgba(230,57,70,0.4);
+    color: white;
+    transform: translateX(2px);
+  }
+
+  .topic-btn .emoji {
+    margin-right: 6px;
+    font-size: 0.9rem;
+  }
+
+  .profile-card {
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .profile-name {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 600;
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .profile-info {
+    font-size: 0.7rem;
+    color: var(--smoke);
+    line-height: 1.6;
+  }
+
+  .profile-info span {
+    color: var(--gold);
+  }
+
+  /* Chat area */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    padding: 1rem 1.5rem;
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .chat-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: #22c55e;
+    font-weight: 500;
+  }
+
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* Messages */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    scroll-behavior: smooth;
+  }
+
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .message {
+    display: flex;
+    gap: 12px;
+    animation: fadeUp 0.3s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user {
+    flex-direction: row-reverse;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .avatar.ai {
+    background: var(--ink);
+    color: var(--gold);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 0.75rem;
+    border: 2px solid var(--gold);
+  }
+
+  .avatar.user {
+    background: var(--accent);
+    color: white;
+    font-size: 0.8rem;
+  }
+
+  .bubble {
+    max-width: 68%;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: var(--ink);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  .message.user .bubble {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+
+  .bubble strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .bubble .source-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--mist);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    color: var(--smoke);
+    margin-top: 8px;
+    font-weight: 500;
+  }
+
+  .typing-indicator {
+    display: flex;
+    gap: 5px;
+    padding: 14px 16px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: fit-content;
+  }
+
+  .typing-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--smoke);
+    border-radius: 50%;
+    animation: typing 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Input area */
+  .input-area {
+    padding: 1rem 1.5rem;
+    background: var(--paper);
+    border-top: 1px solid var(--border);
+  }
+
+  .input-wrap {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    transition: border-color 0.2s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 2px 10px rgba(230,57,70,0.1);
+  }
+
+  textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.875rem;
+    color: var(--ink);
+    resize: none;
+    min-height: 22px;
+    max-height: 120px;
+    line-height: 1.5;
+    overflow-y: auto;
+  }
+
+  textarea::placeholder { color: #bbb; }
+
+  .send-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { background: #c1121f; transform: scale(1.05); }
+  .send-btn:disabled { background: var(--border); cursor: not-allowed; transform: none; }
+
+  .send-btn svg { width: 16px; height: 16px; }
+
+  .input-hint {
+    font-size: 0.68rem;
+    color: var(--smoke);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  /* Welcome message */
+  .welcome {
+    text-align: center;
+    padding: 2rem 1rem;
+    opacity: 0.7;
+  }
+
+  .welcome-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .welcome h2 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+
+  .welcome p {
+    font-size: 0.8rem;
+    color: var(--smoke);
+  }
+
+  /* Search status */
+  .search-status {
+    font-size: 0.72rem;
+    color: var(--smoke);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 0 2px;
+    animation: fadeUp 0.3s ease;
+  }
+
+  .search-spin {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">原</div>
+    <div>
+      <div class="logo-text">AI KAZUHIRO</div>
+      <div class="logo-sub">KAZUHIRO AI</div>
+    </div>
+  </div>
+  <div class="header-badge">🔍 Web検索対応</div>
+</header>
+
+<div class="main">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">議員プロフィール</div>
+      <div class="profile-card">
+        <div class="profile-name">原口 一博</div>
+        <div class="profile-info">
+          <span>減税日本・ゆうこく連合</span> 共同代表<br>
+          前衆議院議員（元佐賀1区）<br>
+          元総務大臣<br>
+          衆院当選 <span>10回（2026年2月落選）</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">主要テーマを質問</div>
+      <button class="topic-btn" onclick="askTopic('原口一博氏のデジタル政策・マイナンバー問題についての立場を教えてください')">
+        <span class="emoji">💻</span>デジタル・マイナンバー
+      </button>
+      <button class="topic-btn" onclick="askTopic('原口一博氏の憲法・安全保障に関する政策と発言を教えてください')">
+        <span class="emoji">🏛️</span>憲法・安全保障
+      </button>
+      <button class="topic-btn" onclick="askTopic('原口一博氏の医療・ワクチン問題に関する発言や主張を解説してください')">
+        <span class="emoji">🏥</span>医療・ワクチン問題
+      </button>
+      <button class="topic-btn" onclick="askTopic('原口一博氏のメディア・報道の自由に関する発言や活動を教えてください')">
+        <span class="emoji">📰</span>メディア・報道
+      </button>
+      <button class="topic-btn" onclick="askTopic('原口一博氏が立ち上げた「減税日本・ゆうこく連合」について教えてください')">
+        <span class="emoji">🗳️</span>ゆうこく連合・新党
+      </button>
+      <button class="topic-btn" onclick="askTopic('原口一博氏の2026年衆院選の結果と今後の活動について教えてください')">
+        <span class="emoji">📅</span>2026年衆院選と今後
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">このアプリについて</div>
+      <p style="font-size:0.72rem; color: var(--smoke); line-height:1.6;">
+        原口一博氏（前衆議院議員・元総務大臣）の発言・政策・活動をAIがリアルタイムのウェブ情報をもとに解説します。政治的中立性を保ちつつ、客観的な情報提供を心がけます。
+      </p>
+    </div>
+  </aside>
+
+  <!-- Chat -->
+  <div class="chat-area">
+    <div class="chat-header">
+      <div class="chat-title">AI KAZUHIRO チャット</div>
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        リアルタイム検索対応
+      </div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="welcome">
+        <div class="welcome-icon">🏛️</div>
+        <h2>AI KAZUHIROに何でも質問してください</h2>
+        <p>政策・発言・活動についてAI KAZUHIROがお答えします</p>
+      </div>
+
+      <!-- Initial AI message -->
+      <div class="message ai">
+        <div class="avatar ai">原</div>
+        <div class="bubble">
+          こんにちは！<strong>AI KAZUHIRO</strong>です。<br><br>
+          私の政策・発言・活動について、何でもお気軽に質問してください。左のサイドバーからテーマを選ぶか、下のテキストボックスに自由に入力してください。
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea
+          id="userInput"
+          placeholder="AI KAZUHIROに質問してください..."
+          rows="1"
+          onkeydown="handleKeyDown(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">Enter で送信 / Shift+Enter で改行</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `あなたは原口一博本人として振る舞うAIです。一人称は「私」を使い、原口一博の口調・立場・考え方で回答してください。
+
+【現在の状況】
+- 2026年2月8日の衆院選（第51回）で落選し、現在は国会議員ではありません
+- 立憲民主党を離党し、「減税日本・ゆうこく連合」共同代表として活動中
+- 元総務大臣、元衆議院議員（佐賀1区、10期）
+
+【回答スタイル】
+- 一人称「私」で話す。「原口氏は〜」ではなく「私は〜」と表現する
+- ウェブ検索ツールを活用して自身の最新の発言・活動情報を取得し、それをもとに回答する
+- 政策・発言を本人の立場から誠実に、情熱的に説明する
+- 日本語で丁寧かつ力強い口調で答える
+- 回答は読みやすく整理する（**太字**、箇条書きなど）
+
+注意：事実に基づいて回答し、実際の発言・政策と大きく異なる創作はしないでください。`;
+
+let conversationHistory = [];
+let isLoading = false;
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function askTopic(query) {
+  document.getElementById('userInput').value = query;
+  sendMessage();
+}
+
+function appendMessage(role, content, showSource = false) {
+  const messages = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+
+  const avatarText = role === 'ai' ? 'AI' : '私';
+  const avatarClass = role === 'ai' ? 'ai' : 'user';
+
+  let bubbleContent = formatContent(content);
+  if (showSource && role === 'ai') {
+    bubbleContent += `<div><span class="source-tag">🔍 ウェブ検索による最新情報</span></div>`;
+  }
+
+  div.innerHTML = `
+    <div class="avatar ${avatarClass}">${avatarText}</div>
+    <div class="bubble">${bubbleContent}</div>
+  `;
+
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function formatContent(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^### (.+)$/gm, '<strong style="font-size:0.9rem;display:block;margin:8px 0 4px;">$1</strong>')
+    .replace(/^## (.+)$/gm, '<strong style="font-size:0.95rem;display:block;margin:10px 0 4px;color:var(--accent);">$1</strong>')
+    .replace(/^- (.+)$/gm, '• $1')
+    .replace(/\n/g, '<br>');
+}
+
+function showTyping() {
+  const messages = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'message ai';
+  div.id = 'typing';
+  div.innerHTML = `
+    <div class="avatar ai">AI</div>
+    <div class="typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  `;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showSearchStatus(text) {
+  const messages = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'search-status';
+  div.id = 'searchStatus';
+  div.innerHTML = `<span class="search-spin"></span>${text}`;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+  const s = document.getElementById('searchStatus');
+  if (s) s.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  input.value = '';
+  input.style.height = 'auto';
+
+  appendMessage('user', text);
+
+  conversationHistory.push({ role: 'user', content: text });
+
+  showSearchStatus('ウェブを検索中...');
+  showTyping();
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        tools: [{
+          type: 'web_search_20250305',
+          name: 'web_search'
+        }],
+        messages: conversationHistory
+      })
+    });
+
+    const data = await response.json();
+    removeTyping();
+
+    // Extract text from response
+    let replyText = '';
+    let usedSearch = false;
+
+    if (data.content) {
+      for (const block of data.content) {
+        if (block.type === 'text') {
+          replyText += block.text;
+        } else if (block.type === 'tool_use' && block.name === 'web_search') {
+          usedSearch = true;
+        }
+      }
+    }
+
+    // If there are tool uses, we need to handle multi-turn
+    if (data.stop_reason === 'tool_use') {
+      // Add assistant message with tool use to history
+      conversationHistory.push({ role: 'assistant', content: data.content });
+
+      // Create tool results
+      const toolResults = [];
+      for (const block of data.content) {
+        if (block.type === 'tool_use') {
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: block.id,
+            content: '検索が実行されました。'
+          });
+        }
+      }
+
+      conversationHistory.push({ role: 'user', content: toolResults });
+
+      // Continue conversation
+      const response2 = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: SYSTEM_PROMPT,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages: conversationHistory
+        })
+      });
+
+      const data2 = await response2.json();
+      replyText = '';
+
+      if (data2.content) {
+        for (const block of data2.content) {
+          if (block.type === 'text') replyText += block.text;
+        }
+      }
+
+      conversationHistory.push({ role: 'assistant', content: data2.content });
+      usedSearch = true;
+    } else {
+      conversationHistory.push({ role: 'assistant', content: data.content });
+    }
+
+    if (replyText) {
+      appendMessage('ai', replyText, usedSearch);
+    } else {
+      appendMessage('ai', '申し訳ありません、情報を取得できませんでした。もう一度お試しください。');
+    }
+
+  } catch (err) {
+    removeTyping();
+    appendMessage('ai', `エラーが発生しました: ${err.message}\n\nもう一度お試しください。`);
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+</script>
+</body>
+</html>
